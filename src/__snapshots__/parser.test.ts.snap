@@ -1,0 +1,50 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`should parse \`parse multiple declarations\` 1`] = `
+[
+  {
+    "property": "background",
+    "type": "declaration",
+    "value": "-webkit-gradient(linear, left top, left bottom, from(white), to(black))",
+  },
+  {
+    "property": "content",
+    "type": "declaration",
+    "value": "" "",
+  },
+  {
+    "type": "comment",
+    "value": " comment ",
+  },
+  {
+    "property": "foo",
+    "type": "declaration",
+    "value": "bar",
+  },
+  {
+    "property": "-o-transition",
+    "type": "declaration",
+    "value": "all .5s",
+  },
+]
+`;
+
+exports[`should parse \`parses single declaration\` 1`] = `
+[
+  {
+    "property": "background-color",
+    "type": "declaration",
+    "value": "#C0FFEE",
+  },
+]
+`;
+
+exports[`should parse \`parses when comment precedes colon\` 1`] = `
+[
+  {
+    "property": "text-align",
+    "type": "declaration",
+    "value": "center",
+  },
+]
+`;
