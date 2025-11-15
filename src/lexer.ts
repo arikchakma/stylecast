@@ -33,16 +33,18 @@ const FIXED_IDENT_CHARS = new Set([
 
 export class Lexer {
   private source: string;
+  private length: number;
   public position: number;
 
   constructor(source: string) {
     this.source = source;
+    this.length = source.length;
     this.position = 0;
   }
 
   private peek(offset: number = 0): string | null {
     const targetPosition = this.position + offset;
-    if (targetPosition >= this.source.length) {
+    if (targetPosition >= this.length) {
       return null;
     }
 
@@ -59,7 +61,7 @@ export class Lexer {
   }
 
   private isEndOfFile(): boolean {
-    return this.position >= this.source.length;
+    return this.position >= this.length;
   }
 
   private isWhitespace(char: string): boolean {
