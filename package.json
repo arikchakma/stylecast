@@ -9,6 +9,9 @@
   "main": "./dist/index.cjs",
   "module": "./dist/index.mjs",
   "types": "./dist/index.d.cts",
+  "files": [
+    "dist/**"
+  ],
   "exports": {
     ".": {
       "import": "./dist/index.mjs",
