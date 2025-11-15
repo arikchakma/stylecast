@@ -3,6 +3,7 @@
   "description": "A fast and lightweight inline CSS style parser for JavaScript and TypeScript",
   "version": "0.0.1",
   "packageManager": "pnpm@10.15.0",
+  "license": "MIT",
   "type": "module",
   "private": false,
   "main": "./dist/index.cjs",
@@ -16,6 +17,7 @@
     "./package.json": "./package.json"
   },
   "scripts": {
+    "bench": "tsx benchmark/benchmark.ts",
     "build": "tsdown",
     "test": "vitest",
     "format": "prettier --write \"**/*.{ts,tsx,js,jsx,json,css,md}\"",
