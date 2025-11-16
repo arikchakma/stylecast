@@ -1,33 +1,79 @@
 import { expect, test } from 'vitest';
 import type { Node } from './ast';
 import { parse } from './parser';
-import { TOKEN_KINDS } from './token';
 
 type Case = [string, Node[]];
 
 const cases: Case[] = [
-  ['/* comment */', [{ type: 'comment', value: ' comment ' }]],
+  [
+    '/* comment */',
+    [
+      {
+        type: 'comment',
+        value: ' comment ',
+        start: { line: 1, column: 1 },
+        end: { line: 1, column: 14 },
+      },
+    ],
+  ],
   [
     '/* comment \n comment */',
-    [{ type: 'comment', value: ' comment \n comment ' }],
+    [
+      {
+        type: 'comment',
+        value: ' comment \n comment ',
+        start: { line: 1, column: 1 },
+        end: { line: 2, column: 12 },
+      },
+    ],
   ],
   [
     '/* comment */ /* comment */',
     [
-      { type: 'comment', value: ' comment ' },
-      { type: 'comment', value: ' comment ' },
+      {
+        type: 'comment',
+        value: ' comment ',
+        start: { line: 1, column: 1 },
+        end: { line: 1, column: 14 },
+      },
+      {
+        type: 'comment',
+        value: ' comment ',
+        start: { line: 1, column: 15 },
+        end: { line: 1, column: 28 },
+      },
     ],
   ],
-  [' color: red; ', [{ type: 'declaration', property: 'color', value: 'red' }]],
+  [
+    ' color: red; ',
+    [
+      {
+        type: 'declaration',
+        property: 'color',
+        value: 'red',
+        start: { line: 1, column: 2 },
+        end: { line: 1, column: 13 },
+      },
+    ],
+  ],
   [
     'text-align/**/ /*:*/ : /*:*//**/ center',
-    [{ type: 'declaration', property: 'text-align', value: 'center' }],
+    [
+      {
+        type: 'declaration',
+        property: 'text-align',
+        value: 'center',
+        start: { line: 1, column: 1 },
+        end: { line: 1, column: 40 },
+      },
+    ],
   ],
 ];
 
-test.each(cases)('should parse `%s`', (source, nodes) =>
-  expect(parse(source)).toEqual(nodes)
-);
+test.each(cases)('should parse `%s`', (source, nodes) => {
+  const result = parse(source);
+  expect(result).toEqual(nodes);
+});
 
 const snapshots = [
   [
@@ -48,7 +94,7 @@ test.each(snapshots)('should parse `%s`', (description, source) => {
   expect(result).toMatchSnapshot();
 });
 
-const errors: [unknown, string][] = [
+const errors: [unknown, string | RegExp][] = [
   ...([
     undefined,
     null,
@@ -65,11 +111,9 @@ const errors: [unknown, string][] = [
     value,
     `Expected first argument to be a string, got ${typeof value}`,
   ]) as [unknown, string][]),
-  [
-    'overflow',
-    `Expected ':' after property overflow, got '${TOKEN_KINDS.EOF}'`,
-  ],
-  ['/* comment', 'Unterminated comment: /* comment'],
+  ['overflow', /Invalid CSS declaration/],
+  ['/* comment', /Unterminated CSS comment/],
+  ['"foo', /Unterminated CSS string/],
 ];
 
 test.each(errors)('should throw `%s`', (value, message) => {
