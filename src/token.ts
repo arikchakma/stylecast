@@ -23,7 +23,14 @@ export const TOKEN_KINDS = {
 
 export type TokenKind = (typeof TOKEN_KINDS)[keyof typeof TOKEN_KINDS];
 
+export type Position = {
+  line: number;
+  column: number;
+};
+
 export interface Token {
   kind: TokenKind;
   value: string;
+  start: Position;
+  end: Position;
 }

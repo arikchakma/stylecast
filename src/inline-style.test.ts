@@ -1,6 +1,5 @@
-import { describe, expect, test } from 'vitest';
 import cssParse from 'inline-style-parser';
-import type { Node } from './ast';
+import { describe, expect, test } from 'vitest';
 import { parse } from './parser';
 
 const cases = [
@@ -59,7 +58,7 @@ const cases = [
 describe('inline-css', () => {
   test.each(cases)('should parse `%s`', (source) => {
     const result = parse(source);
-    const inlineResult: Node[] = cssParse(source).map((node) => {
+    const inlineResult = cssParse(source).map((node) => {
       if (node.type === 'declaration') {
         return {
           type: 'declaration',
@@ -74,6 +73,20 @@ describe('inline-css', () => {
       };
     });
 
-    expect(result).toEqual(inlineResult);
+    const resultWithoutPositions = result.map((node) => {
+      if (node.type === 'declaration') {
+        return {
+          type: node.type,
+          property: node.property,
+          value: node.value,
+        };
+      }
+      return {
+        type: node.type,
+        value: node.value,
+      };
+    });
+
+    expect(resultWithoutPositions).toEqual(inlineResult);
   });
 });

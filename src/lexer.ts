@@ -1,4 +1,4 @@
-import type { Token, TokenKind } from './token';
+import type { Token } from './token';
 import { TOKEN_KINDS } from './token';
 
 export const NEWLINE = '\n';
@@ -35,11 +35,15 @@ export class Lexer {
   private source: string;
   private length: number;
   public position: number;
+  public line: number;
+  public column: number;
 
   constructor(source: string) {
     this.source = source;
     this.length = source.length;
     this.position = 0;
+    this.line = 1;
+    this.column = 1;
   }
 
   private peek(offset: number = 0): string | null {
@@ -55,6 +59,11 @@ export class Lexer {
     const char = this.peek();
     if (char !== null) {
       this.position += 1;
+      this.column += 1;
+      if (char === NEWLINE) {
+        this.line += 1;
+        this.column = 1;
+      }
     }
 
     return char;
@@ -76,6 +85,9 @@ export class Lexer {
 
   private whitespace(): Token {
     const start = this.position;
+    const startLine = this.line;
+    const startColumn = this.column;
+
     // loop until we find a non-whitespace character
     // so that we can merge multiple whitespace characters into a single token
     while (true) {
@@ -87,14 +99,19 @@ export class Lexer {
       this.consume();
     }
 
-    return this.token(
-      TOKEN_KINDS.WHITESPACE,
-      this.source.slice(start, this.position)
-    );
+    return {
+      kind: TOKEN_KINDS.WHITESPACE,
+      value: this.source.slice(start, this.position),
+      start: { line: startLine, column: startColumn },
+      end: { line: this.line, column: this.column },
+    };
   }
 
   private comment(): Token {
     const start = this.position;
+    const startLine = this.line;
+    const startColumn = this.column;
+
     this.consume();
     this.consume();
 
@@ -107,11 +124,16 @@ export class Lexer {
     }
 
     const value = this.source.slice(start, this.position);
-    if (!value.endsWith(ASTERISK + SLASH)) {
-      return this.token(TOKEN_KINDS.BAD_COMMENT, value);
-    }
+    const kind = value.endsWith(ASTERISK + SLASH)
+      ? TOKEN_KINDS.COMMENT
+      : TOKEN_KINDS.BAD_COMMENT;
 
-    return this.token(TOKEN_KINDS.COMMENT, value);
+    return {
+      kind,
+      value,
+      start: { line: startLine, column: startColumn },
+      end: { line: this.line, column: this.column },
+    };
   }
 
   private isNewLine(char: string): boolean {
@@ -122,6 +144,9 @@ export class Lexer {
 
   private string(): Token {
     const start = this.position;
+    const startLine = this.line;
+    const startColumn = this.column;
+
     const first = this.consume();
 
     while (true) {
@@ -134,10 +159,12 @@ export class Lexer {
         this.consume();
         const escapedChar = this.consume();
         if (escapedChar === null) {
-          return this.token(
-            TOKEN_KINDS.BAD_STRING,
-            this.source.slice(start, this.position)
-          );
+          return {
+            kind: TOKEN_KINDS.BAD_STRING,
+            value: this.source.slice(start, this.position),
+            start: { line: startLine, column: startColumn },
+            end: { line: this.line, column: this.column },
+          };
         }
 
         if (this.isNewLine(escapedChar)) {
@@ -151,21 +178,28 @@ export class Lexer {
     }
 
     if (this.peek() !== first) {
-      return this.token(
-        TOKEN_KINDS.BAD_STRING,
-        this.source.slice(start, this.position)
-      );
+      return {
+        kind: TOKEN_KINDS.BAD_STRING,
+        value: this.source.slice(start, this.position),
+        start: { line: startLine, column: startColumn },
+        end: { line: this.line, column: this.column },
+      };
     }
 
     this.consume();
-    return this.token(
-      TOKEN_KINDS.STRING,
-      this.source.slice(start, this.position)
-    );
+    return {
+      kind: TOKEN_KINDS.STRING,
+      value: this.source.slice(start, this.position),
+      start: { line: startLine, column: startColumn },
+      end: { line: this.line, column: this.column },
+    };
   }
 
   private ident(): Token {
     const start = this.position;
+    const startLine = this.line;
+    const startColumn = this.column;
+
     this.consume();
 
     while (true) {
@@ -181,19 +215,22 @@ export class Lexer {
       this.consume();
     }
 
-    return this.token(
-      TOKEN_KINDS.IDENT,
-      this.source.slice(start, this.position)
-    );
-  }
-
-  private token(kind: TokenKind, value: string): Token {
-    return { kind, value };
+    return {
+      kind: TOKEN_KINDS.IDENT,
+      value: this.source.slice(start, this.position),
+      start: { line: startLine, column: startColumn },
+      end: { line: this.line, column: this.column },
+    };
   }
 
   readNextToken(): Token {
     if (this.isEndOfFile()) {
-      return this.token(TOKEN_KINDS.EOF, '');
+      return {
+        kind: TOKEN_KINDS.EOF,
+        value: '',
+        start: { line: this.line, column: this.column },
+        end: { line: this.line, column: this.column },
+      };
     }
 
     const peeked = this.peek();
@@ -202,22 +239,54 @@ export class Lexer {
     }
 
     switch (peeked) {
-      case COLON:
+      case COLON: {
+        const startLine = this.line;
+        const startColumn = this.column;
         this.consume();
-        return this.token(TOKEN_KINDS.COLON, peeked);
-      case SEMICOLON:
+        return {
+          kind: TOKEN_KINDS.COLON,
+          value: peeked,
+          start: { line: startLine, column: startColumn },
+          end: { line: this.line, column: this.column },
+        };
+      }
+      case SEMICOLON: {
+        const startLine = this.line;
+        const startColumn = this.column;
         this.consume();
-        return this.token(TOKEN_KINDS.SEMICOLON, peeked);
-      case COMMA:
+        return {
+          kind: TOKEN_KINDS.SEMICOLON,
+          value: peeked,
+          start: { line: startLine, column: startColumn },
+          end: { line: this.line, column: this.column },
+        };
+      }
+      case COMMA: {
+        const startLine = this.line;
+        const startColumn = this.column;
         this.consume();
-        return this.token(TOKEN_KINDS.COMMA, peeked);
-      case SLASH:
+        return {
+          kind: TOKEN_KINDS.COMMA,
+          value: peeked,
+          start: { line: startLine, column: startColumn },
+          end: { line: this.line, column: this.column },
+        };
+      }
+      case SLASH: {
+        const startLine = this.line;
+        const startColumn = this.column;
         this.consume();
         if (this.peek() === ASTERISK) {
           return this.comment();
         }
 
-        return this.token(TOKEN_KINDS.DELIM, peeked);
+        return {
+          kind: TOKEN_KINDS.DELIM,
+          value: peeked,
+          start: { line: startLine, column: startColumn },
+          end: { line: this.line, column: this.column },
+        };
+      }
       /// all of these are whitespace
       /// @see https://www.w3.org/TR/2021/CRD-css-syntax-3-20211224/#whitespace-diagram
       case SPACE:

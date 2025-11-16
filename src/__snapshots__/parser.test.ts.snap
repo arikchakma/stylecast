@@ -3,26 +3,66 @@
 exports[`should parse \`parse multiple declarations\` 1`] = `
 [
   {
+    "end": {
+      "column": 85,
+      "line": 1,
+    },
     "property": "background",
+    "start": {
+      "column": 1,
+      "line": 1,
+    },
     "type": "declaration",
     "value": "-webkit-gradient(linear, left top, left bottom, from(white), to(black))",
   },
   {
+    "end": {
+      "column": 25,
+      "line": 2,
+    },
     "property": "content",
+    "start": {
+      "column": 7,
+      "line": 2,
+    },
     "type": "declaration",
     "value": "" "",
   },
   {
+    "end": {
+      "column": 39,
+      "line": 2,
+    },
+    "start": {
+      "column": 26,
+      "line": 2,
+    },
     "type": "comment",
     "value": " comment ",
   },
   {
+    "end": {
+      "column": 15,
+      "line": 3,
+    },
     "property": "foo",
+    "start": {
+      "column": 7,
+      "line": 3,
+    },
     "type": "declaration",
     "value": "bar",
   },
   {
+    "end": {
+      "column": 36,
+      "line": 3,
+    },
     "property": "-o-transition",
+    "start": {
+      "column": 15,
+      "line": 3,
+    },
     "type": "declaration",
     "value": "all .5s",
   },
@@ -32,7 +72,15 @@ exports[`should parse \`parse multiple declarations\` 1`] = `
 exports[`should parse \`parses single declaration\` 1`] = `
 [
   {
+    "end": {
+      "column": 27,
+      "line": 1,
+    },
     "property": "background-color",
+    "start": {
+      "column": 1,
+      "line": 1,
+    },
     "type": "declaration",
     "value": "#C0FFEE",
   },
@@ -42,7 +90,15 @@ exports[`should parse \`parses single declaration\` 1`] = `
 exports[`should parse \`parses when comment precedes colon\` 1`] = `
 [
   {
+    "end": {
+      "column": 40,
+      "line": 1,
+    },
     "property": "text-align",
+    "start": {
+      "column": 1,
+      "line": 1,
+    },
     "type": "declaration",
     "value": "center",
   },

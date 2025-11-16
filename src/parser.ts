@@ -20,6 +20,7 @@ export class Parser {
   }
 
   private declaration(): Declaration {
+    const startToken = this.currentToken;
     const property = this.currentToken.value;
     this.advance();
 
@@ -35,13 +36,14 @@ export class Parser {
     let currentKind = this.currentToken.kind;
     if (currentKind !== TOKEN_KINDS.COLON) {
       throw new Error(
-        `Expected ':' after property ${property}, got '${currentKind}'`
+        `Expected ':' after property ${property}, got '${currentKind}' at ${this.currentToken.start.line}:${this.currentToken.start.column}`
       );
     }
 
     this.advance();
 
     let value = '';
+    let lastValueToken = this.currentToken;
     while (true) {
       const kind = this.currentToken.kind;
       if (kind === TOKEN_KINDS.SEMICOLON || kind === TOKEN_KINDS.EOF) {
@@ -54,6 +56,7 @@ export class Parser {
       }
 
       value += this.currentToken.value;
+      lastValueToken = this.currentToken;
       this.advance();
     }
 
@@ -62,22 +65,34 @@ export class Parser {
       currentKind !== TOKEN_KINDS.SEMICOLON &&
       currentKind !== TOKEN_KINDS.EOF
     ) {
-      throw new Error(`Expected semicolon after value ${value}`);
+      throw new Error(
+        `Expected semicolon after value ${value} at ${this.currentToken.start.line}:${this.currentToken.start.column}`
+      );
     }
+
+    const endToken =
+      currentKind === TOKEN_KINDS.SEMICOLON
+        ? this.currentToken
+        : lastValueToken;
 
     return {
       type: 'declaration',
       property,
       value: value.trim(),
+      start: startToken.start,
+      end: endToken.end,
     };
   }
 
   private comment(): Comment {
+    const commentToken = this.currentToken;
     const node: Comment = {
       type: 'comment',
       /// we strip the /* and */ from the value
       /// to match the inline-style-parser output
-      value: this.currentToken.value.slice(2, -2),
+      value: commentToken.value.slice(2, -2),
+      start: commentToken.start,
+      end: commentToken.end,
     };
 
     this.advance();
@@ -96,9 +111,23 @@ export class Parser {
           declarations.push(this.declaration());
           break;
         case TOKEN_KINDS.BAD_COMMENT:
-          throw new Error('Unterminated comment: ' + this.currentToken.value);
+          throw new Error(
+            'Unterminated comment: ' +
+              this.currentToken.value +
+              ' at ' +
+              this.currentToken.start.line +
+              ':' +
+              this.currentToken.start.column
+          );
         case TOKEN_KINDS.BAD_STRING:
-          throw new Error('Unterminated string: ' + this.currentToken.value);
+          throw new Error(
+            'Unterminated string: ' +
+              this.currentToken.value +
+              ' at ' +
+              this.currentToken.start.line +
+              ':' +
+              this.currentToken.start.column
+          );
         default:
           this.advance();
           continue;
