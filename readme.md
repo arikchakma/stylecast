@@ -26,6 +26,9 @@ console.log(object);
 // { color: 'red' }
 ```
 
+> [!NOTE]
+> This library is designed to parse CSS from HTML `style` attributes (inline styles) only. It does not support the full CSS syntax including selectors, at-rules, media queries, or other CSS features outside of declaration blocks.
+
 ### Acknowledgements
 
 This project was inspired by and learned from:
