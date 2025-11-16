@@ -276,10 +276,6 @@ export class Lexer {
         const startLine = this.line;
         const startColumn = this.column;
         this.consume();
-        if (this.peek() === ASTERISK) {
-          return this.comment();
-        }
-
         return {
           kind: TOKEN_KINDS.DELIM,
           value: peeked,

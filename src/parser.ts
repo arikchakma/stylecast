@@ -65,7 +65,6 @@ export class Parser {
       currentKind !== TOKEN_KINDS.SEMICOLON &&
       currentKind !== TOKEN_KINDS.EOF
     ) {
-      throw new Error(
       throw new SyntaxError(
         `Invalid CSS declaration. Expected a semicolon (';') to terminate the declaration with value '${value}'. Instead, found '${this.currentToken.value}' (${currentKind}) at line ${this.currentToken.start.line}, column ${this.currentToken.start.column}.`
       );
