@@ -12,7 +12,7 @@ export const TOKEN_KINDS = {
   // Literals
   IDENT: 'ident-token', // color, background, solid, etc.
   STRING: 'string-token', // "Open Sans", 'Roboto'
-  BAD_STRING: 'bad-string', // "Open Sans", 'Roboto'
+  BAD_STRING: 'bad-string', // "Open Sans, 'Roboto"
 
   // Operators / delimiters
   DELIM: 'delim-token', // -, +, /, *, =, etc.

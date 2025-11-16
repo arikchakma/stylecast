@@ -1,7 +1,6 @@
 import { expect, test } from 'vitest';
 import type { Node } from './ast';
 import { parse } from './parser';
-import { TOKEN_KINDS } from './token';
 
 type Case = [string, Node[]];
 
@@ -95,7 +94,7 @@ test.each(snapshots)('should parse `%s`', (description, source) => {
   expect(result).toMatchSnapshot();
 });
 
-const errors: [unknown, string][] = [
+const errors: [unknown, string | RegExp][] = [
   ...([
     undefined,
     null,
@@ -112,11 +111,9 @@ const errors: [unknown, string][] = [
     value,
     `Expected first argument to be a string, got ${typeof value}`,
   ]) as [unknown, string][]),
-  [
-    'overflow',
-    `Expected ':' after property overflow, got '${TOKEN_KINDS.EOF}'`,
-  ],
-  ['/* comment', 'Unterminated comment: /* comment'],
+  ['overflow', /Invalid CSS declaration/],
+  ['/* comment', /Unterminated CSS comment/],
+  ['"foo', /Unterminated CSS string/],
 ];
 
 test.each(errors)('should throw `%s`', (value, message) => {

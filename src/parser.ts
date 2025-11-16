@@ -35,8 +35,8 @@ export class Parser {
 
     let currentKind = this.currentToken.kind;
     if (currentKind !== TOKEN_KINDS.COLON) {
-      throw new Error(
-        `Expected ':' after property ${property}, got '${currentKind}' at ${this.currentToken.start.line}:${this.currentToken.start.column}`
+      throw new SyntaxError(
+        `Invalid CSS declaration. Expected a colon (':') after the property name '${property}'. Instead, found '${this.currentToken.value}' (${currentKind}) at line ${this.currentToken.start.line}, column ${this.currentToken.start.column}.`
       );
     }
 
@@ -66,7 +66,8 @@ export class Parser {
       currentKind !== TOKEN_KINDS.EOF
     ) {
       throw new Error(
-        `Expected semicolon after value ${value} at ${this.currentToken.start.line}:${this.currentToken.start.column}`
+      throw new SyntaxError(
+        `Invalid CSS declaration. Expected a semicolon (';') to terminate the declaration with value '${value}'. Instead, found '${this.currentToken.value}' (${currentKind}) at line ${this.currentToken.start.line}, column ${this.currentToken.start.column}.`
       );
     }
 
@@ -102,8 +103,13 @@ export class Parser {
   parse() {
     const declarations: Node[] = [];
 
-    while (this.currentToken.kind !== TOKEN_KINDS.EOF) {
-      switch (this.currentToken.kind) {
+    while (true) {
+      const kind = this.currentToken.kind;
+      if (kind === TOKEN_KINDS.EOF) {
+        break;
+      }
+
+      switch (kind) {
         case TOKEN_KINDS.COMMENT:
           declarations.push(this.comment());
           break;
@@ -111,22 +117,12 @@ export class Parser {
           declarations.push(this.declaration());
           break;
         case TOKEN_KINDS.BAD_COMMENT:
-          throw new Error(
-            'Unterminated comment: ' +
-              this.currentToken.value +
-              ' at ' +
-              this.currentToken.start.line +
-              ':' +
-              this.currentToken.start.column
+          throw new SyntaxError(
+            `Unterminated CSS comment. The comment '${this.currentToken.value}' (starting at line ${this.currentToken.start.line}, column ${this.currentToken.start.column}) was not properly closed with '*/'.`
           );
         case TOKEN_KINDS.BAD_STRING:
-          throw new Error(
-            'Unterminated string: ' +
-              this.currentToken.value +
-              ' at ' +
-              this.currentToken.start.line +
-              ':' +
-              this.currentToken.start.column
+          throw new SyntaxError(
+            `Unterminated CSS string. The string '${this.currentToken.value}' (starting at line ${this.currentToken.start.line}, column ${this.currentToken.start.column}) was not properly closed with a matching quote.`
           );
         default:
           this.advance();
