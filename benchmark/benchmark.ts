@@ -1,5 +1,5 @@
 import inlineStyleParser from 'inline-style-parser';
-import { bench, group, run } from 'mitata';
+import { bench, group, run, summary } from 'mitata';
 import { parse } from '../src/parser';
 
 const testCases = [
@@ -21,31 +21,35 @@ const testCases = [
 ];
 
 for (const [index, css] of testCases.entries()) {
-  group(
-    `Case ${index + 1}: ${css.slice(0, 50)}${css.length > 50 ? '...' : ''}`,
-    () => {
-      bench('inline-style-parser', () => {
-        inlineStyleParser(css);
-      });
+  summary(() => {
+    group(
+      `Case ${index + 1}: ${css.slice(0, 50)}${css.length > 50 ? '...' : ''}`,
+      () => {
+        bench('inline-style-parser', () => {
+          inlineStyleParser(css);
+        });
 
-      bench('custom parser', () => {
-        parse(css);
-      });
-    }
-  );
+        bench('custom parser', () => {
+          parse(css);
+        });
+      }
+    );
+  });
 }
 
-group('Parsing all test cases', () => {
-  bench('inline-style-parser', () => {
-    for (const css of testCases) {
-      inlineStyleParser(css);
-    }
-  });
+summary(() => {
+  group('Parsing all test cases', () => {
+    bench('inline-style-parser', () => {
+      for (const css of testCases) {
+        inlineStyleParser(css);
+      }
+    });
 
-  bench('custom parser', () => {
-    for (const css of testCases) {
-      parse(css);
-    }
+    bench('custom parser', () => {
+      for (const css of testCases) {
+        parse(css);
+      }
+    });
   });
 });
 
