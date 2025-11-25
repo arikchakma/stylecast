@@ -1,30 +1,26 @@
 import type { Token } from './token';
 import { TOKEN_KINDS } from './token';
 
-export const NEWLINE = '\n';
-export const CARRIAGE_RETURN = '\r';
-export const NEWLINE_SEQUENCE = '\r\n';
-export const FORM_FEED = '\f';
+const NEWLINE = '\n'.charCodeAt(0);
+const CARRIAGE_RETURN = '\r'.charCodeAt(0);
+const FORM_FEED = '\f'.charCodeAt(0);
+const SPACE = ' '.charCodeAt(0);
+const TAB = '\t'.charCodeAt(0);
 
-export const SPACE = ' ';
-export const TAB = '\t';
-
-export const COLON = ':';
-export const SEMICOLON = ';';
-export const COMMA = ',';
-
-export const QUOTATION_MARK = '"';
-export const APOSTROPHE = "'";
-
-export const SLASH = '/';
-export const BACKSLASH = '\\';
-export const ASTERISK = '*';
+const SLASH = '/'.charCodeAt(0);
+const ASTERISK = '*'.charCodeAt(0);
+const COLON = ':'.charCodeAt(0);
+const SEMICOLON = ';'.charCodeAt(0);
+const COMMA = ','.charCodeAt(0);
+const BACKSLASH = '\\'.charCodeAt(0);
+const QUOTE = '"'.charCodeAt(0);
+const APOSTROPHE = "'".charCodeAt(0);
 
 const FIXED_IDENT_CHARS = new Set([
   COLON,
   SEMICOLON,
   COMMA,
-  QUOTATION_MARK,
+  QUOTE,
   APOSTROPHE,
   SLASH,
   BACKSLASH,
@@ -33,53 +29,59 @@ const FIXED_IDENT_CHARS = new Set([
 
 export class Lexer {
   private source: string;
+  private bytes: Uint8Array;
   private length: number;
+
   public position: number;
   public line: number;
   public column: number;
 
   constructor(source: string) {
     this.source = source;
-    this.length = source.length;
+    this.bytes = new TextEncoder().encode(source);
+    this.length = this.bytes.length;
     this.position = 0;
     this.line = 1;
     this.column = 1;
   }
 
-  private peek(offset: number = 0): string | null {
+  private peek(offset: number = 0): number | null {
     const targetPosition = this.position + offset;
     if (targetPosition >= this.length) {
       return null;
     }
 
-    return this.source[targetPosition] ?? null;
+    return this.bytes[targetPosition] ?? null;
   }
 
-  private consume(): string | null {
-    const char = this.peek();
-    if (char !== null) {
-      this.position += 1;
-      this.column += 1;
-      if (char === NEWLINE) {
-        this.line += 1;
-        this.column = 1;
-      }
+  private consume(): number | null {
+    const b = this.peek();
+    if (b === null) {
+      return null;
     }
 
-    return char;
+    this.position += 1;
+    this.column += 1;
+
+    if (b === NEWLINE) {
+      this.line += 1;
+      this.column = 1;
+    }
+
+    return b;
   }
 
   private isEndOfFile(): boolean {
     return this.position >= this.length;
   }
 
-  private isWhitespace(char: string): boolean {
+  private isWhitespace(b: number): boolean {
     return (
-      char === SPACE ||
-      char === TAB ||
-      char === NEWLINE ||
-      char === CARRIAGE_RETURN ||
-      char === FORM_FEED
+      b === SPACE ||
+      b === TAB ||
+      b === NEWLINE ||
+      b === CARRIAGE_RETURN ||
+      b === FORM_FEED
     );
   }
 
@@ -88,11 +90,9 @@ export class Lexer {
     const startLine = this.line;
     const startColumn = this.column;
 
-    // loop until we find a non-whitespace character
-    // so that we can merge multiple whitespace characters into a single token
     while (true) {
-      const char = this.peek();
-      if (char === null || !this.isWhitespace(char)) {
+      const b = this.peek();
+      if (b === null || !this.isWhitespace(b)) {
         break;
       }
 
@@ -116,15 +116,17 @@ export class Lexer {
     this.consume();
 
     while (this.peek() !== null) {
-      const char = this.consume();
-      if (char === ASTERISK && this.peek() === SLASH) {
+      const b = this.consume();
+      if (b === ASTERISK && this.peek() === SLASH) {
         this.consume();
         break;
       }
     }
 
     const value = this.source.slice(start, this.position);
-    const kind = value.endsWith(ASTERISK + SLASH)
+    const kind = value.endsWith(
+      String.fromCharCode(ASTERISK) + String.fromCharCode(SLASH)
+    )
       ? TOKEN_KINDS.COMMENT
       : TOKEN_KINDS.BAD_COMMENT;
 
@@ -136,10 +138,8 @@ export class Lexer {
     };
   }
 
-  private isNewLine(char: string): boolean {
-    return (
-      char === NEWLINE || char === CARRIAGE_RETURN || char === NEWLINE_SEQUENCE
-    );
+  private isNewLine(b: number): boolean {
+    return b === NEWLINE || b === CARRIAGE_RETURN;
   }
 
   private string(): Token {
@@ -148,17 +148,25 @@ export class Lexer {
     const startColumn = this.column;
 
     const first = this.consume();
+    if (first === null) {
+      return {
+        kind: TOKEN_KINDS.BAD_STRING,
+        value: this.source.slice(start, this.position),
+        start: { line: startLine, column: startColumn },
+        end: { line: this.line, column: this.column },
+      };
+    }
 
     while (true) {
-      const char = this.peek();
-      if (char === null || char === first) {
+      const b = this.peek();
+      if (b === null || b === first) {
         break;
       }
 
-      if (char === BACKSLASH) {
+      if (b === BACKSLASH) {
         this.consume();
-        const escapedChar = this.consume();
-        if (escapedChar === null) {
+        const escaped = this.consume();
+        if (escaped === null) {
           return {
             kind: TOKEN_KINDS.BAD_STRING,
             value: this.source.slice(start, this.position),
@@ -167,7 +175,7 @@ export class Lexer {
           };
         }
 
-        if (this.isNewLine(escapedChar)) {
+        if (this.isNewLine(escaped)) {
           continue;
         }
 
@@ -187,6 +195,7 @@ export class Lexer {
     }
 
     this.consume();
+
     return {
       kind: TOKEN_KINDS.STRING,
       value: this.source.slice(start, this.position),
@@ -203,12 +212,8 @@ export class Lexer {
     this.consume();
 
     while (true) {
-      const char = this.peek();
-      if (
-        char === null ||
-        this.isWhitespace(char) ||
-        FIXED_IDENT_CHARS.has(char)
-      ) {
+      const b = this.peek();
+      if (b === null || this.isWhitespace(b) || FIXED_IDENT_CHARS.has(b)) {
         break;
       }
 
@@ -233,19 +238,34 @@ export class Lexer {
       };
     }
 
-    const peeked = this.peek();
-    if (peeked === SLASH && this.peek(1) === ASTERISK) {
+    const b = this.peek();
+    if (b === null) {
+      return {
+        kind: TOKEN_KINDS.EOF,
+        value: '',
+        start: { line: this.line, column: this.column },
+        end: { line: this.line, column: this.column },
+      };
+    }
+
+    if (b === SLASH && this.peek(1) === ASTERISK) {
       return this.comment();
     }
 
-    switch (peeked) {
+    if (this.isWhitespace(b)) {
+      return this.whitespace();
+    }
+
+    const ch = String.fromCharCode(b);
+
+    switch (b) {
       case COLON: {
         const startLine = this.line;
         const startColumn = this.column;
         this.consume();
         return {
           kind: TOKEN_KINDS.COLON,
-          value: peeked,
+          value: ch,
           start: { line: startLine, column: startColumn },
           end: { line: this.line, column: this.column },
         };
@@ -256,7 +276,7 @@ export class Lexer {
         this.consume();
         return {
           kind: TOKEN_KINDS.SEMICOLON,
-          value: peeked,
+          value: ch,
           start: { line: startLine, column: startColumn },
           end: { line: this.line, column: this.column },
         };
@@ -267,7 +287,7 @@ export class Lexer {
         this.consume();
         return {
           kind: TOKEN_KINDS.COMMA,
-          value: peeked,
+          value: ch,
           start: { line: startLine, column: startColumn },
           end: { line: this.line, column: this.column },
         };
@@ -278,7 +298,7 @@ export class Lexer {
         this.consume();
         return {
           kind: TOKEN_KINDS.DELIM,
-          value: peeked,
+          value: ch,
           start: { line: startLine, column: startColumn },
           end: { line: this.line, column: this.column },
         };
@@ -289,10 +309,9 @@ export class Lexer {
       case TAB:
       case NEWLINE:
       case CARRIAGE_RETURN:
-      case NEWLINE_SEQUENCE:
       case FORM_FEED:
         return this.whitespace();
-      case QUOTATION_MARK:
+      case QUOTE:
       case APOSTROPHE:
         return this.string();
       default:
@@ -304,14 +323,13 @@ export class Lexer {
 export function lex(source: string): Token[] {
   const lexer = new Lexer(source);
   const tokens: Token[] = [];
+
   while (true) {
     const token = lexer.readNextToken();
+    tokens.push(token);
     if (token.kind === TOKEN_KINDS.EOF) {
-      tokens.push(token);
       break;
     }
-
-    tokens.push(token);
   }
 
   return tokens;

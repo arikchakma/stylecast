@@ -341,6 +341,47 @@ const cases: Case[] = [
       },
     ],
   ],
+  [
+    'color: #ff0000;',
+    [
+      {
+        kind: TOKEN_KINDS.IDENT,
+        value: 'color',
+        start: { line: 1, column: 1 },
+        end: { line: 1, column: 6 },
+      },
+      {
+        kind: TOKEN_KINDS.COLON,
+        value: ':',
+        start: { line: 1, column: 6 },
+        end: { line: 1, column: 7 },
+      },
+      {
+        kind: TOKEN_KINDS.WHITESPACE,
+        value: ' ',
+        start: { line: 1, column: 7 },
+        end: { line: 1, column: 8 },
+      },
+      {
+        kind: TOKEN_KINDS.IDENT,
+        value: '#ff0000',
+        start: { line: 1, column: 8 },
+        end: { line: 1, column: 15 },
+      },
+      {
+        kind: TOKEN_KINDS.SEMICOLON,
+        value: ';',
+        start: { line: 1, column: 15 },
+        end: { line: 1, column: 16 },
+      },
+      {
+        kind: TOKEN_KINDS.EOF,
+        value: '',
+        start: { line: 1, column: 16 },
+        end: { line: 1, column: 16 },
+      },
+    ],
+  ],
 ];
 
 test.each(cases)('should lex `%s`', (source, tokens) => {
