@@ -303,6 +303,8 @@ export class Lexer {
           end: { line: this.line, column: this.column },
         };
       }
+      /// all of these are whitespace
+      /// @see https://www.w3.org/TR/2021/CRD-css-syntax-3-20211224/#whitespace-diagram
       case SPACE:
       case TAB:
       case NEWLINE:
