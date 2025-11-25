@@ -1,7 +1,7 @@
 {
   "name": "stylecast",
   "description": "A fast and lightweight inline CSS style parser for JavaScript and TypeScript",
-  "version": "0.0.3",
+  "version": "0.0.4",
   "packageManager": "pnpm@10.15.0",
   "license": "MIT",
   "type": "module",
