@@ -1,7 +1,7 @@
 {
   "name": "stylecast",
-  "version": "0.0.6",
-  "private": true,
+  "version": "0.0.4",
+  "private": false,
   "description": "A fast and lightweight inline CSS style parser for JavaScript and TypeScript",
   "keywords": [
     "css",
@@ -52,6 +52,7 @@
     "mitata": "^1.0.34",
     "oxfmt": "^0.19.0",
     "oxlint": "^1.34.0",
+    "publint": "^0.3.16",
     "tsdown": "^0.16.8",
     "typescript": "^5.9.3",
     "vitest": "^4.0.16"

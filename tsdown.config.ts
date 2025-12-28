@@ -16,4 +16,5 @@ export default defineConfig({
   outputOptions: {
     name: pkgName,
   },
+  publint: true,
 });
