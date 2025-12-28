@@ -1,6 +1,6 @@
 {
   "name": "stylecast",
-  "version": "0.0.5",
+  "version": "0.0.6",
   "private": true,
   "description": "A fast and lightweight inline CSS style parser for JavaScript and TypeScript",
   "keywords": [
