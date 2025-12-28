@@ -38,7 +38,7 @@
     "bench": "tsx benchmark/benchmark.ts",
     "build": "tsdown",
     "test": "vitest",
-    "prepublishOnly": "pnpm run build",
+    "prepublishOnly": "bun run build",
     "format:write": "oxfmt",
     "format:check": "oxfmt --check ",
     "lint": "oxlint",
