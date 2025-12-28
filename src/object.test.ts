@@ -1,4 +1,5 @@
 import { expect, test } from 'vitest';
+
 import { objectify } from './object';
 import { declarations } from './parser';
 

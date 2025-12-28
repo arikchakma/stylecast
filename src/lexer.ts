@@ -1,4 +1,5 @@
 import type { Token } from './token';
+
 import { TOKEN_KINDS } from './token';
 
 const NEWLINE = '\n'.charCodeAt(0);

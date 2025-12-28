@@ -1,5 +1,6 @@
 import type { Declaration } from './ast';
 import type { CamelCaseOptions } from './camel-case';
+
 import { camelCase } from './camel-case';
 import { declarations } from './parser';
 

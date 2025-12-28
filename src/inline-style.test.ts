@@ -1,5 +1,6 @@
 import cssParse from 'inline-style-parser';
 import { describe, expect, test } from 'vitest';
+
 import { parse } from './parser';
 
 const cases = [

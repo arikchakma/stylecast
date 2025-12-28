@@ -1,6 +1,8 @@
 import { expect, test } from 'vitest';
+
 import { lex } from './lexer';
-import { TOKEN_KINDS, type Token } from './token';
+import { TOKEN_KINDS } from './token';
+import type { Token } from './token';
 
 type Case = [string, Token[]];
 

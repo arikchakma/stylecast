@@ -15,25 +15,21 @@ jobs:
 
     strategy:
       matrix:
-        node: [lts/*]
         os: [ubuntu-latest]
       fail-fast: false
 
     steps:
       - uses: actions/checkout@v4
-      - uses: pnpm/action-setup@v3
-      - uses: actions/setup-node@v4
-        with:
-          node-version: ${{ matrix.node }}
-
-      - name: Setup
-        run: npm i -g @antfu/ni
+      - uses: oven-sh/setup-bun@v2
 
       - name: Install
-        run: nci
+        run: bun ci
 
       - name: Build
-        run: nr build
+        run: bun run build
 
       - name: Test
-        run: nr test
+        run: bun run test
+
+      - name: Lint
+        run: bun run lint

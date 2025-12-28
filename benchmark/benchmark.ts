@@ -1,5 +1,6 @@
 import inlineStyleParser from 'inline-style-parser';
 import { bench, group, run, summary } from 'mitata';
+
 import { parse } from '../src/parser';
 
 const testCases = [

@@ -1,6 +1,7 @@
 import type { Comment, Declaration, Node } from './ast';
-import { Lexer } from './lexer';
 import type { Token } from './token';
+
+import { Lexer } from './lexer';
 import { TOKEN_KINDS } from './token';
 
 export class Parser {
