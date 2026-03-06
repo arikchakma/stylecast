@@ -30,7 +30,6 @@ const FIXED_IDENT_CHARS = new Set([
 
 export class Lexer {
   private source: string;
-  private bytes: Uint8Array;
   private length: number;
 
   public position: number;
@@ -39,8 +38,7 @@ export class Lexer {
 
   constructor(source: string) {
     this.source = source;
-    this.bytes = new TextEncoder().encode(source);
-    this.length = this.bytes.length;
+    this.length = source.length;
     this.position = 0;
     this.line = 1;
     this.column = 1;
@@ -52,7 +50,7 @@ export class Lexer {
       return null;
     }
 
-    return this.bytes[targetPosition] ?? null;
+    return this.source.charCodeAt(targetPosition);
   }
 
   private consume(): number | null {
