@@ -2,6 +2,7 @@
   "name": "stylecast",
   "version": "0.0.5",
   "private": false,
+  "sideEffects": false,
   "description": "A fast and lightweight inline CSS style parser for JavaScript and TypeScript",
   "keywords": [
     "css",

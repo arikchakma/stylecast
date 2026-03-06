@@ -7,7 +7,7 @@ export default defineConfig({
   entry: ['src/index.ts'],
   outDir: 'dist',
   format: ['esm', 'cjs', 'iife'],
-  target: 'es2020',
+  target: 'es2022',
   sourcemap: true,
   clean: true,
   dts: true,
