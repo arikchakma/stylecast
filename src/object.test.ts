@@ -123,6 +123,20 @@ const cases = [
   ],
   ['foo:bar; baz:qux', { foo: 'bar', baz: 'qux' }],
   ['--custom-property: value;', { '--custom-property': 'value' }],
+
+  // non-ascii
+  [
+    'font-family: "微软雅黑", sans-serif;',
+    { 'font-family': '"微软雅黑", sans-serif' },
+  ],
+  [
+    'font-family: "ヒラギノ角ゴ Pro";',
+    { 'font-family': '"ヒラギノ角ゴ Pro"' },
+  ],
+  ['--label: "Ñoño";', { '--label': '"Ñoño"' }],
+  ['content: "★"; color: red;', { content: '"★"', color: 'red' }],
+  ['content: "café";', { content: '"café"' }],
+  ['content: "👍";', { content: '"👍"' }],
 ] as const;
 
 test.each(cases)('should objectify `%s`', (source, object) =>

@@ -68,6 +68,39 @@ const cases: Case[] = [
       },
     ],
   ],
+
+  // non-ascii
+  [
+    'font-family: "微软雅黑";',
+    [
+      {
+        type: 'declaration',
+        property: 'font-family',
+        value: '"微软雅黑"',
+        start: { line: 1, column: 1 },
+        end: { line: 1, column: 21 },
+      },
+    ],
+  ],
+  [
+    'content: "→"; color: red;',
+    [
+      {
+        type: 'declaration',
+        property: 'content',
+        value: '"→"',
+        start: { line: 1, column: 1 },
+        end: { line: 1, column: 14 },
+      },
+      {
+        type: 'declaration',
+        property: 'color',
+        value: 'red',
+        start: { line: 1, column: 15 },
+        end: { line: 1, column: 26 },
+      },
+    ],
+  ],
 ];
 
 test.each(cases)('should parse `%s`', (source, nodes) => {
