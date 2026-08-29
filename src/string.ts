@@ -13,8 +13,8 @@ export function stringify(
   const declarations: string[] = [];
   for (const [property, value] of Object.entries(object)) {
     const key = options.kebabCase ? kebabCase(property) : property;
-    declarations.push(`${key}: ${value};`);
+    declarations.push(`${key}:${value}`);
   }
 
-  return declarations.join(' ');
+  return declarations.join(';');
 }
