@@ -4,5 +4,6 @@ export * from './kebab-case';
 export * from './lexer';
 export * from './object';
 export * from './parser';
+export * from './shorthand';
 export * from './string';
 export * from './token';
