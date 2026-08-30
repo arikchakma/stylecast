@@ -56,30 +56,33 @@ type Entry = [string, string];
 
 function components(value: string) {
   const parts: string[] = [];
-  let current = '';
   let depth = 0;
+  let start = -1;
 
-  for (const char of value) {
+  for (let index = 0; index < value.length; index++) {
+    const char = value[index]!;
+
     if (char === '(') {
       depth++;
-    }
-    if (char === ')') {
+    } else if (char === ')') {
       depth--;
     }
 
     if (depth === 0 && WHITESPACE_REGEX.test(char)) {
-      if (current) {
-        parts.push(current);
-        current = '';
+      if (start !== -1) {
+        parts.push(value.slice(start, index));
+        start = -1;
       }
       continue;
     }
 
-    current += char;
+    if (start === -1) {
+      start = index;
+    }
   }
 
-  if (current) {
-    parts.push(current);
+  if (start !== -1) {
+    parts.push(value.slice(start));
   }
 
   return parts;
@@ -133,6 +136,50 @@ function sides(build: (side: string) => string) {
   return quad(BOX_SIDES, build);
 }
 
+// every shorthand whose value is a quad, mapped to the longhands it fills
+const QUAD_SHORTHANDS = new Map<string, Quad>([
+  ...BOX_PREFIXES.map(
+    (prefix) => [prefix, sides((side) => `${prefix}-${side}`)] as const
+  ),
+  ...BORDER_PARTS.map(
+    (part) =>
+      [`border-${part}`, sides((side) => `border-${side}-${part}`)] as const
+  ),
+  [
+    'border-radius',
+    quad(RADIUS_CORNERS, (corner) => `border-${corner}-radius`),
+  ] as const,
+]);
+
+// `border-<side>` sets the same three parts `border` does, on one side only
+const BORDER_SIDE_SHORTHANDS = new Map<string, Record<string, string>>(
+  BOX_SIDES.map((side) => [
+    `border-${side}`,
+    Object.fromEntries(
+      BORDER_PARTS.map((part) => [part, `border-${side}-${part}`])
+    ),
+  ])
+);
+
+const BORDER_PART_SHORTHANDS = BORDER_PARTS.map((part) => `border-${part}`);
+
+const CAMEL_CASE_NAMES = new Map<string, string>();
+for (const [shorthand, keys] of QUAD_SHORTHANDS) {
+  for (const name of [shorthand, ...keys]) {
+    CAMEL_CASE_NAMES.set(name, camelCase(name));
+  }
+}
+for (const keys of BORDER_SIDE_SHORTHANDS.values()) {
+  for (const name of Object.values(keys)) {
+    CAMEL_CASE_NAMES.set(name, camelCase(name));
+  }
+}
+CAMEL_CASE_NAMES.set('border', camelCase('border'));
+
+function camel(property: string) {
+  return CAMEL_CASE_NAMES.get(property) ?? camelCase(property);
+}
+
 function zip(keys: Quad, values: Quad) {
   const [firstKey, secondKey, thirdKey, fourthKey] = keys;
   const [first, second, third, fourth] = values;
@@ -146,6 +193,10 @@ function zip(keys: Quad, values: Quad) {
 }
 
 function priority(value: string) {
+  if (!value.includes('!')) {
+    return { bare: value.trim(), important: '' };
+  }
+
   return {
     bare: value.replace(IMPORTANT_REGEX, '').trim(),
     important: IMPORTANT_REGEX.test(value) ? '!important' : '',
@@ -179,58 +230,36 @@ function border(value: string) {
 }
 
 function longhands(property: string, value: string) {
-  const values = edges(components(value));
-
-  for (const prefix of BOX_PREFIXES) {
-    if (property === prefix) {
-      return (
-        values &&
-        zip(
-          sides((side) => `${prefix}-${side}`),
-          values
-        )
-      );
+  const keys = QUAD_SHORTHANDS.get(property);
+  if (keys) {
+    // the elliptical form carries two radii per corner, which no longhand holds
+    if (property === 'border-radius' && value.includes('/')) {
+      return null;
     }
-  }
 
-  for (const part of BORDER_PARTS) {
-    if (property === `border-${part}`) {
-      return (
-        values &&
-        zip(
-          sides((side) => `border-${side}-${part}`),
-          values
-        )
-      );
-    }
-  }
-
-  // the elliptical form carries two radii per corner, which no longhand holds
-  if (property === 'border-radius' && !value.includes('/')) {
-    const corners = quad(RADIUS_CORNERS, (corner) => `border-${corner}-radius`);
-    return values && zip(corners, values);
+    const values = edges(components(value));
+    return values && zip(keys, values);
   }
 
   if (property === 'border') {
     const expanded: Record<string, string> = {};
     for (const [part, partValue] of Object.entries(border(value))) {
-      for (const side of BOX_SIDES) {
-        expanded[`border-${side}-${part}`] = partValue;
+      for (const key of QUAD_SHORTHANDS.get(`border-${part}`)!) {
+        expanded[key] = partValue;
       }
     }
 
     return expanded;
   }
 
-  for (const side of BOX_SIDES) {
-    if (property === `border-${side}`) {
-      const expanded: Record<string, string> = {};
-      for (const [part, partValue] of Object.entries(border(value))) {
-        expanded[`border-${side}-${part}`] = partValue;
-      }
-
-      return expanded;
+  const sideKeys = BORDER_SIDE_SHORTHANDS.get(property);
+  if (sideKeys) {
+    const expanded: Record<string, string> = {};
+    for (const [part, partValue] of Object.entries(border(value))) {
+      expanded[sideKeys[part]!] = partValue;
     }
+
+    return expanded;
   }
 
   return null;
@@ -320,7 +349,7 @@ export function expand(
   options.camelCase ??= false;
 
   const cast = (property: string) =>
-    options.camelCase ? camelCase(property) : property;
+    options.camelCase ? camel(property) : property;
 
   const expanded: Record<string, string> = {};
   for (const [property, value] of Object.entries(object)) {
@@ -359,41 +388,15 @@ export function collapse(
     value,
   ]);
 
-  for (const prefix of BOX_PREFIXES) {
-    entries = replace(
-      entries,
-      sides((side) => `${prefix}-${side}`),
-      prefix,
-      shortest
-    );
+  for (const [shorthand, keys] of QUAD_SHORTHANDS) {
+    entries = replace(entries, keys, shorthand, shortest);
   }
 
-  entries = replace(
-    entries,
-    quad(RADIUS_CORNERS, (corner) => `border-${corner}-radius`),
-    'border-radius',
-    shortest
-  );
-
-  for (const part of BORDER_PARTS) {
-    entries = replace(
-      entries,
-      sides((side) => `border-${side}-${part}`),
-      `border-${part}`,
-      shortest
-    );
-  }
-
-  entries = replace(
-    entries,
-    BORDER_PARTS.map((part) => `border-${part}`),
-    'border',
-    single
-  );
+  entries = replace(entries, BORDER_PART_SHORTHANDS, 'border', single);
 
   const collapsed: Record<string, string> = {};
   for (const [property, value] of entries) {
-    collapsed[options.camelCase ? camelCase(property) : property] = value;
+    collapsed[options.camelCase ? camel(property) : property] = value;
   }
 
   return collapsed;
